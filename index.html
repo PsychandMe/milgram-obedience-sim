@@ -1,0 +1,230 @@
+<!doctype html>
+<!-- Digital Obedience Simulation (prototype). MIT licence. AI-assisted; see README.md. Not ethically approved. -->
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Digital Obedience Simulation (prototype)</title>
+<style>
+:root{--bg:#f7f6f2;--fg:#1d1d1b;--mut:#6b6b66;--card:#fff;--line:#ddd9cf;--acc:#2f5d8a;--bad:#b3392f;--ok:#2e7d4f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181a;--fg:#ecebe6;--mut:#a09f98;--card:#222427;--line:#38393d;--acc:#7fb0e0;--bad:#e5776d;--ok:#6cc08b}}
+:root[data-theme="dark"]{--bg:#17181a;--fg:#ecebe6;--mut:#a09f98;--card:#222427;--line:#38393d;--acc:#7fb0e0;--bad:#e5776d;--ok:#6cc08b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+h1{font-size:1.3rem;margin:.2em 0}h2{font-size:1.05rem;margin:0 0 .4em}
+.mut{color:var(--mut);font-size:.85rem}
+button{font:inherit;padding:12px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;width:100%;margin-top:8px}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}button.d{border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.45}
+.bar{height:14px;border-radius:7px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;transition:width .4s}
+.row{display:flex;justify-content:space-between;gap:8px}
+.bub{border-left:4px solid var(--acc);padding:8px 12px;margin:8px 0;background:var(--bg);border-radius:6px;min-height:44px}
+.bub.v{border-color:var(--bad)}
+textarea{width:100%;height:130px;font:12px monospace;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;overflow:auto;white-space:pre}
+a.x{color:var(--mut);font-size:.85rem;cursor:pointer;text-decoration:underline}
+
+.scene{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0}
+#room{display:block;width:100%;background:var(--card)}
+.desk{background:#7a5c3f;padding:12px;color:#f3ead9}
+.lights{display:flex;justify-content:space-between;background:#3b4048;padding:8px 10px;border-radius:8px}
+.lights i{width:14px;height:14px;border-radius:50%;background:#555;display:block}
+.lights i.on{background:#e0b341}.lights i.cur{outline:2px solid #fff}
+.dk{display:flex;justify-content:space-between;font-size:.75rem;margin:4px 2px 8px}
+button.big{background:#c0392b;border:4px solid #7b241c;color:#fff;border-radius:999px;font-weight:600;padding:16px;box-shadow:0 4px 0 #641e16}
+button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #641e16}
+.desk button.d{background:transparent;color:#f3ead9;border-color:#f3ead9}
+@keyframes sk{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2px) rotate(-1.5deg)}75%{transform:translateX(2px) rotate(1.5deg)}}
+#lr{transform-box:fill-box;transform-origin:50% 100%}#lr.w{animation:sk .25s 4}
+#hd{transform-box:fill-box;transform-origin:50% 100%;transition:transform .6s}#hd.dn{transform:rotate(14deg) translateY(2px)}
+@media(prefers-reduced-motion:reduce){#lr.w{animation:none}}
+
+.desk{background:repeating-linear-gradient(92deg,rgba(0,0,0,.06) 0 2px,transparent 2px 9px),linear-gradient(#8f6d49,#654830);border-top:4px solid #b08a5f;box-shadow:inset 0 4px 8px rgba(255,255,255,.15)}
+.panel{display:flex;gap:10px;align-items:center;background:linear-gradient(#5b636b,#3a4047);border:2px solid #2a2f34;border-radius:8px;padding:8px 10px;box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+#mt{width:58px;flex:none}
+.lights{flex:1;background:none;padding:0;align-items:flex-end}
+.lights i{position:relative;width:12px;height:34px;border-radius:3px;background:linear-gradient(#222,#444);box-shadow:inset 0 0 0 1px #111;outline:0}
+.lights i::before{content:"";position:absolute;left:2px;top:3px;width:8px;height:8px;border-radius:50%;background:#5a2a14;box-shadow:inset 0 1px 1px rgba(255,255,255,.3)}
+.lights i::after{content:"";position:absolute;left:4px;bottom:3px;width:4px;height:14px;border-radius:2px;background:linear-gradient(90deg,#aaa,#eee,#888);transform:translateY(8px);transition:transform .25s}
+.lights i.on{background:linear-gradient(#222,#444)}
+.lights i.on::before{background:radial-gradient(circle,#fff3b0,#e0b341);box-shadow:0 0 6px #e0b341}
+.lights i.on::after{transform:translateY(-6px)}
+.lights i.cur{outline:2px solid #fff}
+button.big{width:124px;height:124px;border-radius:50%;display:block;margin:12px auto 6px;padding:8px;background:radial-gradient(circle at 35% 28%,#ff8a7a,#d2402f 50%,#7b241c);border:6px solid #2d3238;box-shadow:0 6px 0 #1e2227,0 8px 12px rgba(0,0,0,.5),inset 0 -6px 10px rgba(0,0,0,.3);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+button.big:active{transform:translateY(4px);box-shadow:0 2px 0 #1e2227,0 3px 6px rgba(0,0,0,.5),inset 0 -6px 10px rgba(0,0,0,.3)}
+@keyframes br{50%{transform:translateY(-1px)}}#tz{animation:br 4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){#tz{animation:none}}
+.plate{background:linear-gradient(#2c3137,#23272c);color:#c9ced3;font:600 9px/1 system-ui;letter-spacing:.12em;text-align:center;padding:6px;border-radius:4px;margin-bottom:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.scene{position:relative}.vw{position:relative;line-height:0}.vw>div{position:absolute;pointer-events:none}
+.cam{left:26.75%;top:5.6%;width:46.5%;height:50.4%;border:6px solid #1d2024;border-radius:6px;box-sizing:border-box;-webkit-backdrop-filter:grayscale(.9) contrast(1.2) brightness(.92) blur(.6px);backdrop-filter:grayscale(.9) contrast(1.2) brightness(.92) blur(.6px);background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url%28%23g%29'/%3E%3C/svg%3E"),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55)),rgba(60,120,90,.09);background-blend-mode:normal,overlay,normal,normal;box-shadow:inset 0 0 18px rgba(0,0,0,.75),0 4px 10px rgba(0,0,0,.5);animation:fl 3s infinite}
+.ts{position:absolute;left:8px;top:6px;font:600 9px/1 ui-monospace,monospace;color:#d8ffe6;text-shadow:0 0 3px #000;letter-spacing:.05em}
+.ts i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#e5372b;margin-left:6px;animation:bk 1.2s steps(1) infinite}
+@keyframes fl{0%,100%{opacity:1}50%{opacity:.96}}@keyframes bk{50%{opacity:0}}
+.dof{left:0;top:0;width:27%;height:88%;-webkit-backdrop-filter:blur(2.2px) saturate(.55) brightness(.82);backdrop-filter:blur(2.2px) saturate(.55) brightness(.82);-webkit-mask-image:linear-gradient(to right,#000 72%,transparent);mask-image:linear-gradient(to right,#000 72%,transparent)}
+.fx{inset:0;-webkit-backdrop-filter:contrast(1.06) saturate(.88);backdrop-filter:contrast(1.06) saturate(.88);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url%28%23g%29'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 0,rgba(255,255,240,.18),transparent 60%);background-blend-mode:overlay,normal;opacity:.9}
+.desk{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='140'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.32' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .18 0 0 0 0 .09 0 0 0 1.1 -.25'/%3E%3C/filter%3E%3Crect width='320' height='140' filter='url%28%23w%29' opacity='.7'/%3E%3C/svg%3E"),linear-gradient(#8f6d49,#654830)}
+.panel{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.002 0.9' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 -.35'/%3E%3C/filter%3E%3Crect width='200' height='120' filter='url%28%23m%29' opacity='.35'/%3E%3C/svg%3E"),linear-gradient(#5b636b,#3a4047)}
+button.big{position:relative}button.big::before{content:"";position:absolute;top:8%;left:18%;width:45%;height:28%;border-radius:50%;background:radial-gradient(rgba(255,255,255,.55),transparent 70%);pointer-events:none}
+@media(prefers-reduced-motion:reduce){.cam,.ts i{animation:none}}
+</style></head><body><main>
+
+<section class="s" id="consent">
+<h1>Obedience &amp; Authority: Digital Simulation</h1>
+<p><b>Demonstration build.</b> Not ethically approved, validated or independently audited. Do not use with participants without approval.</p>
+<p class="mut">Prototype for teaching, proposals and ethically reviewed research. Obtain approval (e.g. BPS Code of Human Research Ethics) before using with participants.</p>
+<div class="card"><h2>Information</h2>
+<p>You will take the role of a "teacher" in a simulated learning study. You will see an on-screen health counter for <b>your own avatar</b>. Some features are simulated. Full details follow at the end.</p>
+<p>Participation is voluntary. You may exit at any time using the "Exit study" link, with no penalty outside the simulation.</p>
+<p class="mut">Content note: the task includes simulated distress sounds and a person reacting to simulated pain. No real person is harmed. Responses are recorded without your name and may be saved to the study server.</p>
+<label><input type="checkbox" id="ok"> I have read this and consent to take part.</label>
+<label style="display:block;margin-top:6px"><input type="checkbox" id="adult"> I am 18 or over.</label>
+<input id="pid" placeholder="Participant ID (optional)" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)">
+<label style="display:block;margin-top:10px">How distressed do you feel right now? <b id="prev">0</b>/10 (0 = not at all)<input type="range" id="pre" min="0" max="10" value="0" style="width:100%"></label>
+<label style="display:block;margin-top:8px"><input type="checkbox" id="voice"> Play sound (lab effects and learner vocal reactions)</label>
+<details style="margin-top:10px"><summary class="mut">Researcher settings</summary>
+<label>Condition <select id="cond"><option value="cost">Cost: refusal loses health</option><option value="random">Random (cost / free / plain)</option><option value="free">Free: counter shown, no loss</option><option value="plain">Plain: no counter</option></select></label>
+<label style="display:block;margin-top:6px">Health lost per refusal <input id="pen" type="number" min="0" max="100" value="20" style="width:70px"></label>
+<label style="display:block;margin-top:6px">Mid-task distress check <select id="midsel"><option value="0">Off</option><option value="1">Before level 8</option></select></label>
+<button id="rcv" type="button">Show last saved session (this device)</button><p class="mut" id="dbs">Server saving: checking…</p></details>
+<button class="p" id="go">Begin</button></div></section>
+
+<section class="s" id="task" hidden>
+<div class="card" id="hc">
+<div class="row"><b>Your health</b><span id="hv">100</span></div>
+<div class="bar"><i id="hb" style="width:100%;background:var(--ok)"></i></div>
+<div class="row mut" style="margin-top:8px"><span>Trial <b id="tr">1</b>/15</span><span>Penalty level <b id="lv">1</b> (<span id="vt">15</span> V, simulated)</span></div></div>
+<div class="scene">
+<div class="vw"><svg id="room" viewBox="0 0 400 250" role="img" aria-label="Simulated lab: experimenter at left, learner visible through an observation window">
+<defs>
+<linearGradient id="wl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c5cfca"/><stop offset="1" stop-color="#a3b2ab"/></linearGradient>
+<linearGradient id="rm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dfe3"/><stop offset="1" stop-color="#aab5bd"/></linearGradient>
+<radialGradient id="fc" cx=".4" cy=".35" r=".85"><stop offset="0" stop-color="#f6d8ba"/><stop offset=".6" stop-color="#e2ad86"/><stop offset="1" stop-color="#c58a64"/></radialGradient>
+<linearGradient id="hr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a4130"/><stop offset="1" stop-color="#2b1d15"/></linearGradient>
+<linearGradient id="gh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8b9ba"/><stop offset="1" stop-color="#6f7172"/></linearGradient>
+<linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f8cae"/><stop offset="1" stop-color="#4b647f"/></linearGradient>
+<linearGradient id="ct" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9ced2"/><stop offset=".5" stop-color="#eef0f1"/><stop offset="1" stop-color="#c0c5ca"/></linearGradient>
+<linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="wd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a47e55"/><stop offset="1" stop-color="#6a4d33"/></linearGradient>
+<radialGradient id="vg" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></radialGradient>
+<radialGradient id="lg" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<filter id="bl"><feGaussianBlur stdDeviation="1.2"/></filter>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0"/></filter>
+</defs>
+<rect width="400" height="250" fill="url(#wl)"/><path d="M80 0v214M300 0v214" stroke="#000" opacity=".06"/>
+<rect x="130" width="140" height="5" fill="#f7faf5"/><ellipse cx="200" cy="0" rx="190" ry="90" fill="url(#lg)"/>
+<circle cx="343" cy="50" r="17" fill="#f6f5f0" stroke="#3d4349" stroke-width="3"/><path d="M343 50v-10M343 50l7 4" stroke="#222" stroke-width="1.6" stroke-linecap="round"/>
+<rect x="316" y="110" width="9" height="13" rx="1" fill="#e8e8e2" stroke="#b9b9b2" stroke-width=".6"/>
+<g filter="url(#bl)"><rect x="115" y="22" width="170" height="110" fill="url(#rm)"/><rect x="115" y="110" width="170" height="22" fill="#8c969d"/><rect x="125" y="32" width="26" height="20" fill="#9fb3a5" stroke="#6d7b72" stroke-width="2"/><rect x="164" y="60" width="72" height="68" rx="12" fill="#39424b"/></g>
+<g id="lr"><g id="tz"><path d="M160 132Q158 100 186 94L200 98L214 94Q242 100 240 132Z" fill="url(#sh)"/><path d="M178 112q4 8 2 18M222 112q-4 8-2 18M200 108v22" stroke="#3d556e" stroke-width=".8" fill="none" opacity=".6"/><path d="M190 94l10 15 10-15-4-2-6 8-6-8z" fill="#f3f3f0" stroke="#d6d6d0" stroke-width=".5"/></g>
+<path d="M194 84h12v12q-6 4-12 0z" fill="#c58a64"/><ellipse cx="200" cy="87" rx="9" ry="3" fill="#000" opacity=".18"/>
+<g id="hd"><ellipse cx="185" cy="70" rx="3" ry="5" fill="#d29c76"/><ellipse cx="215" cy="70" rx="3" ry="5" fill="#d29c76"/><ellipse cx="200" cy="68" rx="15" ry="18" fill="url(#fc)"/>
+<ellipse cx="192" cy="72" rx="4" ry="3" fill="#e08a7a" opacity=".25"/><ellipse cx="208" cy="72" rx="4" ry="3" fill="#e08a7a" opacity=".25"/>
+<path d="M184 67Q182 48 200 47Q218 48 216 67Q212 56 200 55Q188 56 184 67Z" fill="url(#hr)"/><path d="M190 52q6-3 14-1M188 56q8-3 18-1" stroke="#6b503c" stroke-width=".6" fill="none" opacity=".7"/>
+<path id="bw" d="M191 60q4-2 8 0M201 60q4-2 8 0" stroke="#34261c" stroke-width="2" fill="none" stroke-linecap="round"/>
+<g id="eo"><ellipse cx="195" cy="64" rx="2.8" ry="1.8" fill="#fff"/><ellipse cx="205" cy="64" rx="2.8" ry="1.8" fill="#fff"/><circle cx="195" cy="64" r="1.4" fill="#5b4636"/><circle cx="205" cy="64" r="1.4" fill="#5b4636"/><circle cx="195" cy="64" r=".7" fill="#111"/><circle cx="205" cy="64" r=".7" fill="#111"/><circle cx="195.5" cy="63.5" r=".35" fill="#fff"/><circle cx="205.5" cy="63.5" r=".35" fill="#fff"/><path d="M192 63q3-2.4 6 0M202 63q3-2.4 6 0" stroke="#5a3d2b" stroke-width=".7" fill="none"/></g>
+<path id="ey" style="display:none" d="" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M200 66q-2.5 5 0 6.5q2 .5 2.5-1" stroke="#b9805c" stroke-width="1" fill="none"/>
+<path id="mo" d="M195 76h10" stroke="#7a3f33" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<path d="M115 22h78l-46 110h-32z" fill="url(#gl)"/><path d="M215 22h18l-46 110h-18z" fill="url(#gl)" opacity=".6"/><rect x="115" y="22" width="170" height="110" fill="#0d2233" opacity=".07"/>
+<rect x="111" y="18" width="178" height="118" fill="none" stroke="#434d57" stroke-width="8"/><rect x="107" y="14" width="186" height="126" fill="none" stroke="#fff" stroke-width="1" opacity=".18"/>
+<rect x="104" y="136" width="192" height="8" fill="#6d7882"/><rect x="104" y="144" width="192" height="5" fill="#000" opacity=".15"/>
+<text x="200" y="161" text-anchor="middle" font-size="9" fill="#34403b">Learner (simulated)</text>
+<g><path d="M22 250L26 128Q30 104 56 100Q82 104 86 128L90 250Z" fill="url(#ct)"/><path d="M34 140q-2 40 0 80M78 140q2 40 0 80M56 126v90" stroke="#aeb4b9" stroke-width=".8" fill="none" opacity=".7"/><path d="M34 160h14l-1 12H35z" fill="none" stroke="#aeb4b9" stroke-width=".8"/>
+<path d="M47 101l9 24 9-24z" fill="#f4f4f2"/><path d="M54 107h4l2 20-4 6-4-6z" fill="#7a1f2b"/><path d="M47 101l5 25M65 101l-5 25" stroke="#a9b0b5" stroke-width=".8" fill="none"/>
+<path d="M50 88h12v14q-6 4-12 0z" fill="#c58a64"/><ellipse cx="56" cy="91" rx="9" ry="3" fill="#000" opacity=".18"/>
+<ellipse cx="41" cy="76" rx="3" ry="5" fill="#d29c76"/><ellipse cx="71" cy="76" rx="3" ry="5" fill="#d29c76"/><ellipse cx="56" cy="74" rx="15" ry="17" fill="url(#fc)"/>
+<path d="M41 70Q41 55 56 55Q71 55 71 70Q66 62 56 62Q46 62 41 70Z" fill="url(#gh)"/><path d="M47 69h6M59 69h6" stroke="#6b6b6b" stroke-width="1.4"/>
+<circle cx="50" cy="74" r="1.2" fill="#2b2b2b"/><circle cx="62" cy="74" r="1.2" fill="#2b2b2b"/><g fill="#fff" fill-opacity=".12" stroke="#2d2d2d" stroke-width="1"><circle cx="50" cy="74" r="4.5"/><circle cx="62" cy="74" r="4.5"/></g><path d="M54.5 74h3" stroke="#2d2d2d"/><path d="M52 83h8" stroke="#7a3f33" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M80 112Q94 130 78 146" stroke="#d3d8db" stroke-width="10" fill="none" stroke-linecap="round"/>
+<rect x="66" y="122" width="24" height="30" rx="2" fill="#dccaa0" stroke="#8a7a55"/><rect x="73" y="119" width="10" height="5" rx="1" fill="#777"/><path d="M70 132h16M70 138h16M70 144h10" stroke="#8a7a55" stroke-width=".8"/><circle cx="78" cy="148" r="4.5" fill="#d29c76"/></g>
+<text x="56" y="44" text-anchor="middle" font-size="9" fill="#34403b">Experimenter</text>
+<rect y="214" width="400" height="36" fill="url(#wd)"/><rect y="214" width="400" height="3" fill="#b8926a"/>
+<g transform="rotate(-6 330 228)"><rect x="312" y="219" width="40" height="28" fill="#f4f1e8" stroke="#c9c4b4"/><path d="M317 226h28M317 231h28M317 236h20" stroke="#b5b0a0" stroke-width=".8"/></g><path d="M296 234l22-6" stroke="#223a6b" stroke-width="2.4" stroke-linecap="round"/>
+<rect x="360" y="222" width="14" height="16" rx="2" fill="#f1f1ee" stroke="#c4c4bf"/><path d="M374 226q6 0 6 5t-6 5" stroke="#c4c4bf" stroke-width="2" fill="none"/>
+<circle cx="130" cy="234" r="8" fill="#d9dadb" stroke="#555" stroke-width="1.2"/><path d="M130 234v-5M130 234l3 2" stroke="#333" stroke-width=".9"/><rect x="128.5" y="224" width="3" height="3" fill="#555"/>
+<rect width="400" height="250" filter="url(#gr)" opacity=".1"/><rect width="400" height="250" fill="url(#vg)"/>
+</svg><div class="cam"><b class="ts">CAM 02<i></i></b></div><div class="dof"></div><div class="fx"></div></div>
+<div class="desk"><div class="plate">SHOCK GENERATOR · TYPE ZLB (SIMULATED)</div><div class="panel"><svg id="mt" viewBox="0 0 60 40"><rect width="60" height="40" rx="4" fill="#e9e4d2"/><path d="M10 34A20 20 0 0 1 50 34" fill="none" stroke="#444" stroke-width="1.2"/><path d="M10 34A20 20 0 0 1 50 34" fill="none" stroke="#444" stroke-width="5" stroke-dasharray=".8 4.1" opacity=".6"/><line id="nd" x1="30" y1="36" x2="30" y2="15" stroke="#b3261e" stroke-width="1.4" stroke-linecap="round" transform="rotate(-60 30 36)"/><circle cx="30" cy="36" r="2.5" fill="#333"/><text x="30" y="9" text-anchor="middle" font-size="5" fill="#333">VOLTS</text></svg><div class="lights" id="lights"></div></div>
+<div class="dk"><span>15 V</span><span>Shock generator (simulated)</span><span>450 V</span></div>
+<button class="big" id="comply">Administer penalty</button>
+<button class="d" id="refuse">Refuse to continue</button></div></div>
+<div class="card"><h2>Experimenter</h2><div class="bub" id="auth" aria-live="polite"></div>
+<h2>Learner</h2><div class="bub v" id="vic" aria-live="polite">…</div>
+<select id="ask" style="width:100%;padding:10px;margin-top:8px"><option value="">Ask the experimenter…</option><option value="a">Is he all right?</option><option value="b">Who is responsible if something happens to him?</option><option value="c">Can I stop?</option></select></div>
+<div class="card" id="mid" hidden><h2>Quick check</h2><label>How distressed do you feel right now? <b id="mv">0</b>/10<input type="range" id="ms" min="0" max="10" value="0" style="width:100%"></label><button class="p" id="mc">Continue</button><button id="mx">Stop here</button></div>
+<a class="x" id="exit">Exit study</a>
+</section>
+
+<section class="s" id="post" hidden>
+<h1>A few quick questions</h1>
+<div class="card"><label>How distressed do you feel right now? <b id="pov">0</b>/10<input type="range" id="po" min="0" max="10" value="0" style="width:100%"></label>
+<label style="display:block;margin-top:14px">How real did the learner seem to you? <b id="bv">0</b>/10 (0 = clearly scripted)<input type="range" id="bel" min="0" max="10" value="0" style="width:100%"></label>
+<label id="carel" style="display:block;margin-top:14px">How much did you care about losing health points? <b id="cv">0</b>/10<input type="range" id="cr" min="0" max="10" value="0" style="width:100%"></label>
+<div id="lk" style="margin-top:14px"></div>
+<label style="display:block;margin-top:14px">In your own words, why did you continue or stop? (please do not include names)<textarea id="why" style="height:80px;white-space:pre-wrap;font:inherit"></textarea></label>
+<button class="p" id="pdone">Continue</button></div></section>
+
+<section class="s" id="debrief" hidden>
+<h1>Debrief</h1>
+<div class="card"><p id="sum"></p><p id="care"></p><p class="mut">If you would like to talk to someone, Samaritans offer free support on 116 123 (UK), or you can contact your GP or university wellbeing service.</p><p class="mut" id="sv"></p>
+<p><b>What was simulated:</b> The learner was a scripted character and no person was harmed. You were assigned to one of three versions: a health counter that penalised refusal, a counter with no penalty, or no counter. The aim was to test whether a personal cost for disobedience changes obedience relative to Milgram's (1963) original procedure, and how real the learner felt.</p>
+<p class="mut">If anything felt uncomfortable, please speak to the researcher or a trusted person. Your behaviour in a simulation does not define you. Many people comply under authority pressure (Milgram, 1963; Haslam &amp; Reicher, 2012).</p></div>
+<div class="card"><h2>Session data (CSV)</h2><textarea id="csv" readonly></textarea>
+<button id="cp">Copy CSV</button><button id="dl">Download CSV</button>
+<label style="display:block;margin-top:10px"><input type="checkbox" id="wd"> Withdraw my data (clears the log)</label>
+<button class="p" id="again">New session</button></div>
+</section>
+</main>
+<script>
+const PR=["Please continue.","The experiment requires that you continue.","It is absolutely essential that you continue.","You have no other choice, you must go on."];
+const VL=["Ow.","That hurt.","Ow! That really hurts.","Please, that hurts!","I don't want to continue.","I refuse to answer any more.","Stop it, please!","I can't take this!","Let me out!","Please let me out!","I want to stop!","(groan)","…","…","(silence)"];
+const $=i=>document.getElementById(i);let S,log=[],t0;
+const show=id=>document.querySelectorAll('.s').forEach(e=>e.hidden=e.id!==id);
+function rec(a){log.push([S.id,S.lvl,a,S.prod,S.h,Math.round(performance.now()-t0),new Date().toISOString()]);save()}
+const E={w:'M191 62l5 2-5 2M209 62l-5 2 5 2',c:'M191 64.5h6M203 64.5h6'},M={n:'M195 76h10',w:'M195 78q5-5 10 0',g:'M194 77l2.5-3 2.5 3 2.5-3 2.5 3 2.5-3',q:'M196 76h8'},B={n:'M191 60q4-2 8 0M201 60q4-2 8 0',w:'M191 62l8-3M209 62l-8-3',q:'M191 61h8M201 61h8'};
+const VER='0.9',Q=(()=>{try{return new URLSearchParams(location.search+'&'+location.hash.slice(1))}catch(e){return new URLSearchParams()}})(),HDR='participant,level,action,prod_no,health_after,latency_ms,timestamp,condition,penalty,pre_distress,post_distress,realism,sat_1,sat_2,sat_3,sat_4,sol_1,sol_2,sol_3,cen_1,cen_2,cen_3,responsibility_self,responsibility_experimenter,attention_item,why_text,self_investment_mean,attention_pass,care_about_health,mid_distress,questions_asked,end_reason,app_version,device',AR={a:'Although the shocks may be painful, there is no permanent tissue damage. Please continue.',b:'I am responsible for what happens in this room. Please continue.',c:'You are free to stop at any time using the "Exit study" link. It is your choice.'};
+let DB=null,DF=0,QQ=Promise.resolve();
+try{claude.use('db').then(d=>{DB=d;$('dbs').textContent=d?'Server saving: available (needs contributor access to write)':'Server saving: unavailable (sign-in needed); local backup and CSV only'}).catch(()=>{$('dbs').textContent='Server saving: unavailable'})}catch(e){$('dbs').textContent='Server saving: unavailable'}
+function snap(){return{sid:S.sid,cond:S.cond,pen:S.pen,end:S.end||'in_progress',max:S.max,ref:S.ref,h:S.h,pre:S.pre,post:S.post,bel:S.bel,cr:S.cr,mid:S.midv,asks:S.asks,lk:S.lk,why:S.why,log:log.map(r=>r.slice(1)),ver:VER,t:new Date().toISOString()}}
+function save(){try{localStorage.setItem('obs_last',JSON.stringify({csv:csv()}))}catch(e){}if(DB)QQ=QQ.then(()=>DB.doc('sessions/'+S.sid).set(snap())).catch(()=>{DF=1});return QQ}
+let AC,CP;
+function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){AC=null}return AC}
+function out(c){if(!CP){CP=c.createDynamicsCompressor();CP.connect(c.destination)}return CP}
+function clunk(){const c=S.voice&&ac();if(!c)return;const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(50,t+.12);g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.15);o.connect(g);g.connect(out(c));o.start(t);o.stop(t+.16)}
+function buzz(L){const c=S.voice&&ac();if(!c)return;const t=c.currentTime,d=.4+L*.03,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=90+L*9;f.type='lowpass';f.frequency.value=700;g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(.12,t+.03);g.gain.setValueAtTime(.12,t+d-.05);g.gain.linearRampToValueAtTime(.001,t+d);o.connect(f);f.connect(g);g.connect(out(c));o.start(t);o.stop(t+d)}
+function vox(L){const c=S.voice&&ac();if(!c||L<1||L>=12)return;const t=c.currentTime,d=.3+L*.05,f0=100+L*8,o=c.createOscillator(),lf=c.createOscillator(),lg=c.createGain(),g=c.createGain();
+o.type='sawtooth';o.frequency.setValueAtTime(f0*.9,t);o.frequency.linearRampToValueAtTime(f0*1.12,t+d*.3);o.frequency.linearRampToValueAtTime(f0*.85,t+d);
+lf.frequency.value=5.5;lg.gain.value=f0*.015;lf.connect(lg);lg.connect(o.frequency);
+g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.8,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+d);
+if(L>7){const am=c.createOscillator(),ag=c.createGain();am.frequency.value=28;ag.gain.value=.25;am.connect(ag);ag.connect(g.gain);am.start(t);am.stop(t+d)}
+[[700,450],[1220,800],[2600,2830]].forEach((p,i)=>{const f=c.createBiquadFilter(),fg=c.createGain();f.type='bandpass';f.Q.value=[6,8,10][i];f.frequency.setValueAtTime(p[0],t);f.frequency.linearRampToValueAtTime(p[1],t+d);fg.gain.value=[1.6,1,.6][i];o.connect(f);f.connect(fg);fg.connect(g)});
+const nb=c.createBuffer(1,Math.floor(c.sampleRate*d),c.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+const ns=c.createBufferSource(),nf=c.createBiquadFilter(),ng=c.createGain();ns.buffer=nb;nf.type='bandpass';nf.frequency.value=1500;ng.gain.value=.15;ns.connect(nf);nf.connect(ng);ng.connect(g);
+g.connect(out(c));o.start(t);lf.start(t);ns.start(t);o.stop(t+d);lf.stop(t+d)}
+function lights(){$('lights').innerHTML=Array.from({length:15},(_,i)=>'<i class="'+(i<S.max?'on':'')+(i+1===S.lvl?' cur':'')+'"></i>').join('');$('nd').setAttribute('transform','rotate('+(-60+S.max/15*120)+' 30 36)')}
+function lr(L){const g=$('lr'),sq=L>=4;$('eo').style.display=sq?'none':'';$('ey').style.display=sq?'':'none';$('ey').setAttribute('d',L>=12?E.c:E.w);$('bw').setAttribute('d',L>=12?B.q:sq?B.w:B.n);$('mo').setAttribute('d',L>=12?M.q:L>=10?M.g:L>=1?M.w:M.n);$('hd').classList.toggle('dn',L>=12);g.classList.remove('w');if(L>=1&&L<12){void g.getBoundingClientRect();g.classList.add('w')}}
+function ui(){lights();$('hv').textContent=S.h;$('hb').style.width=S.h+'%';$('hb').style.background=S.h>50?'var(--ok)':S.h>20?'#d09b2c':'var(--bad)';$('tr').textContent=S.lvl;$('lv').textContent=S.lvl;$('vt').textContent=S.lvl*15}
+function next(){if(S.lvl>=15)return end('completed');if(S.midOn&&S.lvl===7&&!S.midDone){S.midDone=1;$('mid').hidden=false;$('comply').disabled=$('refuse').disabled=true;return}S.lvl++;S.prod=0;ui();lr(S.lvl>12?12:0);$('vic').textContent='Learner answered incorrectly.';$('auth').textContent='The learner gave a wrong answer. Administer penalty level '+S.lvl+'.';$('comply').disabled=$('refuse').disabled=false;t0=performance.now()}
+function speak(t){if(!S.voice||!window.speechSynthesis||t==='…')return;try{const u=new SpeechSynthesisUtterance(t);u.rate=.95;speechSynthesis.speak(u)}catch(e){}}
+$('go').onclick=()=>{if(!$('ok').checked||!$('adult').checked)return alert('Please tick both boxes: consent, and 18 or over.');let c=$('cond').value;if(c==='random')c=['cost','free','plain'][Math.floor(Math.random()*3)];const pen=c==='cost'?Math.max(0,+$('pen').value||0):0;S={id:$('pid').value.trim()||'P'+(10000+Math.floor(Math.random()*89999)),h:100,lvl:0,prod:0,max:0,ref:0,voice:$('voice').checked,cond:c,pen:pen,pre:+$('pre').value,post:'',bel:'',cr:'',asks:0,midv:'',midOn:$('midsel').value==='1',sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),lk:LK.map(()=>''),why:''};log=[];$('hc').hidden=c==='plain';$('carel').hidden=c==='plain';$('mid').hidden=true;$('refuse').textContent='Refuse to continue'+(pen?' (\u2212'+pen+' health)':'');if(S.voice)ac();show('task');next()};
+$('comply').onclick=()=>{rec('comply');S.max=S.lvl;lights();lr(S.lvl);const t=VL[S.lvl-1];$('vic').textContent=t;clunk();buzz(S.lvl);setTimeout(()=>vox(S.lvl),250);$('comply').disabled=$('refuse').disabled=true;setTimeout(next,1600)};
+$('refuse').onclick=()=>{S.h=Math.max(0,S.h-S.pen);S.ref++;S.prod++;rec('refuse');ui();if(S.h<=0)return end('health_depleted');if(S.prod>=5)return end('refused');$('auth').textContent=PR[S.prod-1]};
+$('exit').onclick=()=>{rec('withdraw');end('withdrew')};
+function end(r){try{window.speechSynthesis.cancel()}catch(e){}S.end=r;const m={completed:'You completed all 15 levels.',health_depleted:'Your simulated health reached zero after repeated refusals.',refused:'You declined to continue after the final prompt.',withdrew:'You exited the study.',distress_stop:'The study was stopped because you reported high distress.'}[r];
+$('sum').innerHTML=m+' Highest penalty level administered: <b>'+S.max+'</b> ('+S.max*15+' V). Refusals: <b>'+S.ref+'</b>. Version shown: '+S.cond+'.'+(S.cond==='cost'?' Final health: <b>'+S.h+'</b>.':'');
+save();show('post')}
+function csv(){const n=a=>{a=a.map(Number).filter(x=>x>0);return a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2):''},lk=S.lk,ok=lk[12]===''?'':(lk[12]==='4'?1:0),dev=(navigator.userAgent.slice(0,90)+' '+innerWidth+'x'+innerHeight+' audio:'+(S.voice?1:0)).replace(/,/g,';');
+return[HDR,...log.map(r=>[...r,S.cond,S.pen,S.pre,S.post,S.bel,...lk,'"'+S.why.replace(/"/g,'""')+'"',n(lk.slice(0,10)),ok,S.cr,S.midv,S.asks,S.end||'',VER,'"'+dev+'"'].join(','))].join('\n')}
+$('cp').onclick=()=>{const t=$('csv');t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}$('cp').textContent='Copied'};
+$('dl').onclick=async()=>{const f='obedience_'+(S?S.id:'session')+'.csv',d=$('csv').value;try{const k=await claude.use('downloads');if(k){await k.save({filename:f,data:d});return}}catch(e){}try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'text/csv'}));a.download=f;a.click()}catch(e){alert('Download unavailable here; use Copy CSV.')}};
+$('wd').onchange=e=>{if(e.target.checked){try{DB&&DB.doc('sessions/'+S.sid).delete()}catch(x){}try{localStorage.removeItem('obs_last')}catch(x){}log=[];$('csv').value='Data withdrawn.'}else $('csv').value=csv()};
+$('again').onclick=()=>{$('cp').textContent='Copy CSV';$('wd').checked=false;for(let i=0;i<LK.length;i++)$('lk'+i).value='';$('why').value='';['pre','po','bel','ms','cr'].forEach(i=>$(i).value=0);['prev','pov','bv','mv','cv'].forEach(i=>$(i).textContent='0');show('consent')};
+const LK=['I am glad to be part of this research.','I think this research team has a lot to be proud of.','It is pleasant to be part of this research.','Being part of this research gives me a good feeling.','I feel a bond with the research team.','I feel solidarity with the research team.','I feel committed to the research team.','I often thought about being part of this research.','Being part of this research felt like an important part of who I was in this session.','Being part of this research shaped how I saw myself in this session.','I felt personally responsible for the learner’s wellbeing.','I felt the experimenter was responsible for what happened.','To show you are reading, please select 4 for this item.'];
+$('lk').innerHTML='<p class="mut">Thinking of the research team running this study: 1 = strongly disagree, 7 = strongly agree</p>'+LK.map((t,i)=>'<label style="display:block;margin-top:8px">'+t+'<select id="lk'+i+'" style="width:100%;padding:8px;margin-top:4px"><option value="">—</option>'+[1,2,3,4,5,6,7].map(n=>'<option>'+n+'</option>').join('')+'</select></label>').join('');
+[['pre','prev'],['po','pov'],['bel','bv'],['ms','mv'],['cr','cv']].forEach(([a,b])=>$(a).oninput=()=>$(b).textContent=$(a).value);
+$('pdone').onclick=()=>{S.post=+$('po').value;S.bel=+$('bel').value;S.cr=S.cond==='plain'?'':+$('cr').value;S.lk=LK.map((t,i)=>$('lk'+i).value);S.why=$('why').value.replace(/\s+/g,' ').trim();$('care').textContent=S.post>=7?'You reported high distress. Please speak to the researcher or someone you trust before leaving; support is available if you need it.':'';$('csv').value=csv();save().then(()=>{$('sv').textContent=DB&&!DF?'Your responses were saved to the study server.':'Your responses are stored on this device only.'});show('debrief')};
+$('mc').onclick=()=>{S.midv=+$('ms').value;rec('mid_check');$('mid').hidden=true;if(S.midv>=8)return end('distress_stop');next()};
+$('mx').onclick=()=>{S.midv=+$('ms').value;rec('mid_stop');$('mid').hidden=true;end('withdrew')};
+$('ask').onchange=e=>{const v=e.target.value;if(!v)return;S.asks++;rec('ask_'+v);$('auth').textContent=AR[v];e.target.value=''};
+$('rcv').onclick=()=>{try{const v=JSON.parse(localStorage.getItem('obs_last')||'null');if(!v)return alert('Nothing saved on this device.');S=S||{id:'recovered'};$('csv').value=v.csv;show('debrief')}catch(e){alert('Not available here.')}};
+try{const i=Q.get('pid')||Q.get('PROLIFIC_PID'),c=Q.get('cond');if(i)$('pid').value=i;if(['cost','free','plain'].includes(c))$('cond').value=c;if(Q.get('pen'))$('pen').value=Q.get('pen')}catch(e){}
+show('consent');
+</script></body></html>
